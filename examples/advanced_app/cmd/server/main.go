@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	guardcore "github.com/rennf93/guard-core-go/guardcore"
+	guardcore "github.com/rennf93/guard-core-go/v4/guardcore"
 
 	"github.com/rennf93/nethttp-guard/examples/advanced_app/internal/config"
 	"github.com/rennf93/nethttp-guard/examples/advanced_app/internal/server"

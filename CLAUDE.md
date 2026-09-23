@@ -15,14 +15,14 @@ nethttp-guard is a net/http middleware adapter for [guard-core-go](https://githu
 This repo is the ADAPTER layer of the guard-core ecosystem:
 
 - `guard-core-go` is the engine. All detection (suspicious activity, IP bans, rate limits, HTTPS enforcement), verdict construction, and error response factories live there.
-- This repo wires Go net/http types to that engine and nothing more. It consumes `github.com/rennf93/guard-core-go v0.1.0` as a normal module dependency (see `go.mod`); no `replace` directive is used or needed. For cross-repo work on the core, add a temporary local `replace` in your own checkout and drop it before committing.
+- This repo wires Go net/http types to that engine and nothing more. It consumes `github.com/rennf93/guard-core-go/v4 v4.0.4` as a normal module dependency (see `go.mod`); no `replace` directive is used or needed. For cross-repo work on the core, add a temporary local `replace` in your own checkout and drop it before committing.
 - Because the middleware is `func(http.Handler) http.Handler`, it works with the stdlib mux, chi, httprouter, gorilla, and anything speaking that signature.
-- Transitive dependencies (indirect, via guard-core-go): `redis/go-redis/v9 v9.7.3`, `cespare/xxhash/v2 v2.2.0`, `dgryski/go-rendezvous`, `dlclark/regexp2 v1.12.0`, `golang.org/x/text v0.39.0`.
+- Transitive dependencies (indirect, via guard-core-go/v4): `redis/go-redis/v9 v9.22.0`, `cespare/xxhash/v2 v2.3.0`, `go.uber.org/atomic`, `dlclark/regexp2 v1.12.0`, `golang.org/x/sys v0.30.0`, `golang.org/x/text v0.41.0`.
 
 ## Boundary Rules
 
 - This adapter MUST NOT implement detection rules, rate limiting, ban storage, IP parsing heuristics, or any verdict logic. Every verdict comes from `engine.Check(req)` in `middleware.go`.
-- This adapter MUST NOT import third-party web frameworks. The only imports in `middleware.go` and `request.go` are the Go standard library and `github.com/rennf93/guard-core-go/guardcore`. Keep it that way.
+- This adapter MUST NOT import third-party web frameworks. The only imports in `middleware.go` and `request.go` are the Go standard library and `github.com/rennf93/guard-core-go/v4/guardcore`. Keep it that way.
 - Verdict translation MUST be exact. `applyResponse` in `middleware.go` sets each verdict header with `w.Header().Set`, writes the verdict status code, and writes the body verbatim. On a clean pass the adapter adds no headers and mutates nothing before calling `next.ServeHTTP`.
 - The adapter MUST fail closed. If `engine.Check` returns an error or panics, the middleware logs via its logger and responds with `engine.CreateErrorResponse(500, "Security check failed")`. The handler is not called. A custom 500 body comes from `cfg.CustomErrorResponses[500]`, not from adapter code.
 - The adapter MUST bound what the engine reads from the body. `request.go` caches at most `maxBytes` (default `DefaultMaxBodyBytes` = 262144) via `fillCacheLocked`. `Body()` and `ReadBodyPrefix` never return more than that prefix. Payload bytes beyond the bound are not scanned, and the full body still reaches the handler untouched through the `replayBody` wrapper installed on `r.Body`.
@@ -48,7 +48,7 @@ Minimal usage (from README.md):
 
 ```go
 import (
-    guardcore "github.com/rennf93/guard-core-go/guardcore"
+    guardcore "github.com/rennf93/guard-core-go/v4/guardcore"
     nethttp "github.com/rennf93/nethttp-guard"
 )
 
@@ -89,7 +89,7 @@ CI runs the test job on a Go matrix of `1.25.x` and `1.26.x` (fail-fast disabled
 ├── request.go           # requestShim (implements guardcore.Request), WithRouteID, DefaultMaxBodyBytes, replayBody
 ├── middleware_test.go   # unit tests, httptest based, Redis disabled
 ├── integration_test.go  # //go:build integration, Redis-backed, skips when REDIS_HOST is unset
-├── go.mod / go.sum      # module github.com/rennf93/nethttp-guard, requires guard-core-go v0.1.0
+├── go.mod / go.sum      # module github.com/rennf93/nethttp-guard, requires guard-core-go/v4 v4.0.4
 ├── README.md            # usage, options, integration test instructions
 ├── LICENSE              # MIT
 └── .github/
@@ -103,7 +103,7 @@ CI runs the test job on a Go matrix of `1.25.x` and `1.26.x` (fail-fast disabled
 ## Technology Stack
 
 - Go, directive `go 1.25.0`; CI matrix tests 1.25.x and 1.26.x.
-- `github.com/rennf93/guard-core-go v0.1.0` (direct require in `go.mod`), providing `guardcore.Engine`, `guardcore.Request`, `guardcore.Response`, `guardcore.SecurityConfig`.
+- `github.com/rennf93/guard-core-go/v4 v4.0.4` (direct require in `go.mod`), providing `guardcore.Engine`, `guardcore.Request`, `guardcore.Response`, `guardcore.SecurityConfig`.
 - Redis 7 for integration tests (CI service container `redis:7-alpine`); runtime Redis usage is a guard-core-go concern, not this adapter's.
 - GitHub Actions: CI on push and pull_request, Release Gate on `v*` tag push, weekly Scheduled Lint, CodeQL (go), Dependabot for gomod and actions, all with minimal permissions and pinned action SHAs.
 
@@ -139,4 +139,4 @@ CI runs the test job on a Go matrix of `1.25.x` and `1.26.x` (fail-fast disabled
 
 ## Related Projects
 
-- [guard-core-go](https://github.com/rennf93/guard-core-go): the engine this adapter wraps. All security logic, configuration, verdicts, and Redis integration live there. Import it as `guardcore "github.com/rennf93/guard-core-go/guardcore"`.
+- [guard-core-go](https://github.com/rennf93/guard-core-go): the engine this adapter wraps. All security logic, configuration, verdicts, and Redis integration live there. Import it as `guardcore "github.com/rennf93/guard-core-go/v4/guardcore"`.
