@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	guardcore "github.com/rennf93/guard-core-go/guardcore"
+	guardcore "github.com/rennf93/guard-core-go/v4/guardcore"
 	nethttp "github.com/rennf93/nethttp-guard"
 	"github.com/rennf93/nethttp-guard/examples/advanced_app/internal/routes"
 )

@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/rennf93/guard-core-go/guardcore"
+	"github.com/rennf93/guard-core-go/v4/guardcore"
 )
 
 const failClosedMessage = "Security check failed"
