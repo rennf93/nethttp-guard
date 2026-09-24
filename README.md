@@ -2,7 +2,7 @@
 
 net/http middleware adapter for [guard-core-go](https://github.com/rennf93/guard-core-go). Translates `*http.Request` into the guardcore request surface, runs the engine, and translates verdicts to exact HTTP responses. Works with the stdlib mux, chi, httprouter, gorilla, and anything speaking `func(http.Handler) http.Handler`.
 
-Docs: https://rennf93.github.io/nethttp-guard/
+Docs: <https://rennf93.github.io/nethttp-guard/>
 
 ## Install
 
