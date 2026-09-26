@@ -59,6 +59,12 @@ func (m *middleware) wrap(next http.Handler) http.Handler {
 			applyResponse(w, verdict)
 			return
 		}
+		// Security headers on the pass-through path: the engine computes the
+		// set (blocked verdicts already carry it), the adapter applies it
+		// before the handler writes its response.
+		for name, value := range m.engine.ResponseHeaders() {
+			w.Header().Set(name, value)
+		}
 		next.ServeHTTP(w, r)
 	})
 }
